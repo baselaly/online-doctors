@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class CreateFeedbacksTable extends Migration
 {
@@ -20,6 +20,8 @@ class CreateFeedbacksTable extends Migration
             $table->foreign('patient_id')->references('id')->on('users');
             $table->unsignedInteger('doctor_id');
             $table->foreign('doctor_id')->references('id')->on('users');
+            $table->unsignedInteger('appointment_id');
+            $table->foreign('appointment_id')->references('id')->on('appointments');
             $table->timestamps();
         });
     }
