@@ -24,7 +24,7 @@ class CreateUsersTable extends Migration
             $table->string('image');
             $table->unsignedInteger('role_id');
             $table->foreign('role_id')->references('id')->on('roles');
-            $table->unsignedInteger('category_id');
+            $table->unsignedInteger('category_id')->nullable();
             $table->foreign('category_id')->references('id')->on('categories');
             $table->timestamps();
         });
