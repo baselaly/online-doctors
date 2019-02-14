@@ -1,6 +1,6 @@
 ## Installation
 
-online-doctors is a web application build with laravel 5.5 for backend development and vuejs for frontend development.
+online-doctors is a web application build with laravel 5.5 for backend development and vuejs & vuetify for frontend development.
 
 - clone project from repository
 - run composer install
