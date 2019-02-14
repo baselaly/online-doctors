@@ -22,7 +22,7 @@ class CreateAppointmentsTable extends Migration
             $table->foreign('patient_id')->references('id')->on('users');
             $table->unsignedInteger('doctor_id');
             $table->foreign('doctor_id')->references('id')->on('users');
-            $table->float('rate', 8, 2)->default(null);
+            $table->float('rate', 8, 2)->nullable();
             $table->integer('status')->default(0);
             $table->timestamps();
         });

@@ -20,7 +20,7 @@ class CreateUsersTable extends Migration
             $table->string('password');
             $table->string('phone');
             $table->text('address');
-            $table->integer('fees')->default(null);
+            $table->integer('fees')->nullable();
             $table->string('image');
             $table->unsignedInteger('role_id');
             $table->foreign('role_id')->references('id')->on('roles');
