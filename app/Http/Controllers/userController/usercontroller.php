@@ -7,6 +7,15 @@ use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use JWTAuth;
+use PayPal\Api\Amount;
+use PayPal\Api\Details;
+use PayPal\Api\Item;
+use PayPal\Api\ItemList;
+use PayPal\Api\Payer;
+use PayPal\Api\Payment;
+use PayPal\Api\PaymentExecution;
+use PayPal\Api\RedirectUrls;
+use PayPal\Api\Transaction;
 
 class usercontroller extends Controller
 {
@@ -104,5 +113,106 @@ class usercontroller extends Controller
             return response()->json(compact('user'), 200);
         }
         return response()->json('something went wrong', 500);
+    }
+
+    public function createPayment()
+    {
+        $apiContext = new \PayPal\Rest\ApiContext(
+            new \PayPal\Auth\OAuthTokenCredential(
+                'AapTlPeSaQqb9qvXLm8QKxsUX9SlaQeDhnsqWqapyBl90IxOB66iqZv5ry0D8Pgi76g5vDldy-w-EzAE', // ClientID
+                'EAG7keJX7HvG8-adrQSZn1oIMZsGSkqMdhR4IQ5bzyZ4NmV2bxFMaTlBR2xb3PiL0BUFAc9Ayrdbc6dX' // ClientSecret
+            )
+        );
+
+        $payer = new Payer();
+        $payer->setPaymentMethod("paypal");
+
+        $item1 = new Item();
+        $item1->setName('Ground Coffee 40 oz')
+            ->setCurrency('USD')
+            ->setQuantity(1)
+            ->setSku("123123") // Similar to `item_number` in Classic API
+            ->setPrice(7);
+        $item2 = new Item();
+        $item2->setName('Granola bars')
+            ->setCurrency('USD')
+            ->setQuantity(5)
+            ->setSku("321321") // Similar to `item_number` in Classic API
+            ->setPrice(2);
+
+        $itemList = new ItemList();
+        $itemList->setItems(array($item1, $item2));
+
+        $details = new Details();
+        $details->setSubtotal(17);
+
+        $amount = new Amount();
+        $amount->setCurrency("USD")
+            ->setTotal(17)
+            ->setDetails($details);
+
+        $transaction = new Transaction();
+        $transaction->setAmount($amount)
+            ->setItemList($itemList)
+            ->setDescription("Payment description")
+            ->setInvoiceNumber(uniqid());
+
+        $redirectUrls = new RedirectUrls();
+        $redirectUrls->setReturnUrl("http://localhost:8000/payment/execute")
+            ->setCancelUrl("http://localhost:8000/payment/cancel");
+
+        $payment = new Payment();
+        $payment->setIntent("sale")
+            ->setPayer($payer)
+            ->setRedirectUrls($redirectUrls)
+            ->setTransactions(array($transaction));
+
+        $payment->create($apiContext);
+
+        return redirect($payment->getApprovalLink());
+    }
+
+    public function executePayment()
+    {
+        try {
+            $apiContext = new \PayPal\Rest\ApiContext(
+                new \PayPal\Auth\OAuthTokenCredential(
+                    'AapTlPeSaQqb9qvXLm8QKxsUX9SlaQeDhnsqWqapyBl90IxOB66iqZv5ry0D8Pgi76g5vDldy-w-EzAE', // ClientID
+                    'EAG7keJX7HvG8-adrQSZn1oIMZsGSkqMdhR4IQ5bzyZ4NmV2bxFMaTlBR2xb3PiL0BUFAc9Ayrdbc6dX' // ClientSecret
+                )
+            );
+
+            $paymentId = $this->request->paymentId;
+            $payment = Payment::get($paymentId, $apiContext);
+
+            $execution = new PaymentExecution();
+            $execution->setPayerId($this->request->PayerID);
+
+            $transaction = new Transaction();
+            $amount = new Amount();
+            $details = new Details();
+
+            $details->setSubtotal(17);
+
+            $amount->setCurrency('USD');
+            $amount->setTotal(17);
+            $amount->setDetails($details);
+            $transaction->setAmount($amount);
+            $execution->addTransaction($transaction);
+            $result = $payment->execute($execution, $apiContext);
+        } catch (\Exception $ex) {
+            // echo $ex->getCode(); // Prints the Error Code
+            // echo $ex->getData(); // Prints the detailed error message
+            dd($ex);
+        } catch (Exception $ex) {
+            die($ex);
+        }
+
+        return $result;
+    }
+
+    public function cancelPayment()
+    {
+        return 'payment cancelled';
     }
 }
