@@ -3,7 +3,7 @@
 Route::group(['middleware' => 'web'], function () {
 
     Route::get('/{path?}', function () {
-        return view('welocme');
+        return view('welcome');
     })->where('path', '[\/\w\.-]*');
 
     // Route::get('/payment', function () {
